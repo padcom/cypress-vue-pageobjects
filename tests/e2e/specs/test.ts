@@ -1,19 +1,21 @@
+/// <reference types="cypress"/>
 // https://docs.cypress.io/api/introduction/api.html
 
-class Scenario {
-  run (entry) {
-    throw new Error('Not implemented')
-  }
+interface Scenario<I extends Page, O extends Page> {
+  run (entry: I): O
 }
 
 class Page {
-  run (scenario) {
+  run<I extends Page, O extends Page>(scenario: Scenario<I, O>): O {
+    // @ts-ignore
     return scenario.run(this)
   }
 }
 
 class Component {
-  constructor (root) {
+  root: any
+
+  constructor (root: any) {
     this.root = root
   }
 }
@@ -61,7 +63,7 @@ class LoginPage extends BasePage {
     cy.visit('/#/login')
   }
 
-  enterCredentials (username, password) {
+  enterCredentials (username: string, password: string) {
     cy.get('input[name="username"]').type(username)
     cy.get('input[name="password"]').type(password)
     return this
@@ -79,8 +81,8 @@ class AboutComponent extends Component {
   }
 }
 
-class ValidateMainPagesScenario extends Scenario {
-  run (entry) {
+class ValidateMainPagesScenario implements Scenario<BasePage, AboutPage> {
+  run (entry: BasePage) {
     return entry
       .goToHomePage()
       .assertContainsPageTitle()
@@ -89,24 +91,26 @@ class ValidateMainPagesScenario extends Scenario {
   }
 }
 
-class LoginScenario extends Scenario {
+class LoginScenario implements Scenario<BasePage, HomePage> {
+  private username: string
+  private password: string
+
   constructor () {
-    super()
     this.username = 'johndoe'
     this.password = 'secret123'
   }
 
-  withUsername (username) {
+  withUsername (username: string) {
     this.username = username
     return this
   }
 
-  withPassword (password) {
+  withPassword (password: string) {
     this.password = password
     return this
   }
 
-  run (entry) {
+  run (entry: BasePage) {
     return entry
       .goToLoginPage()
       .enterCredentials(this.username, this.password)
